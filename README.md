@@ -14,6 +14,13 @@ RxSwift와 친해지는 레포 ^-^
 - Rx를 이해하고 사용할 수 있게 되기
 - Rx를 활용한 공통 프로젝트 하나 완성하기
 
+# 스터디원
+- [Keenkim1202](https://github.com/orgs/iStudyiOS/people/keenkim1202)
+- [camosss](https://github.com/orgs/iStudyiOS/people/camosss)
+- [kms0524](https://github.com/orgs/iStudyiOS/people/kms0524)
+- [simoniful](https://github.com/orgs/iStudyiOS/people/simoniful)
+- [sio2whocodes](https://github.com/orgs/iStudyiOS/people/sio2whocodes)
+- [chminipark](https://github.com/orgs/iStudyiOS/people/chminipark)
 
 # 진행도
 |주차|주제|실습 여부|
