@@ -1,0 +1,151 @@
+# Ch.1 Hello RxSwift
+
+## A. RxSwift?
+
++ `observable(관찰가능한)`: 인터렉션에 대한 변화를 파악 가능하고
++ `asynchronous(비동기)`: 여러 작업이 동시에 이뤄지고
++ `functional(함수의)`: 행동을 저장하고 이러한 행동은 나중에 사용이 가능하도록
++ `via schedulers(스케줄러를 통해)`: 스레드 컨트롤 및 순차적인 구성
+
+> '본질적'으로 코드가 '새로운 데이터에 반응'하고 '순차적으로 분리 된' 방식으로 처리함으로써 '비동기식' 프로그램 개발을 간소화
+
+## B. Cocoa and UIKit Asynchronous APIs
+
+Notification Center, The delegate pattern, Grand Central Dispatch(GCD), Closures
+
++ 정확히 매번 어떤 순서로 작동하는지 가정하는 것은 불가능
++ 사용자 입력, 네트워크 활동 또는 기타 OS 이벤트와 같은 다양한 외부 요인의 영향
++ 부분별로 나눠서 쓰기 매우 어려움
+
+## C. 비동기 프로그래밍 용어들
+### 1. State, and specifically, shared mutable state
+특히 여러가지 비동기 구성요소를 공유할 때 State 관리
+ex. 외부 Flag를 통한 관리, 상태에 대한 내부 프로퍼티
+
+### 2. 명령형 프로그래밍
+> 명령형(절차적) 프로그래밍은 당신이 어떤 일을 어떻게 할 것인가에 관한 것 - HOW
+> 선언적 프로그래밍은 당신이 무엇을 할 것인가에 관한 것입니다. - WHAT
+
++ 프로그래밍의 상태와 상태를 변경시키는 구문의 관점에서 연산을 설명
++ 명령형 위주로 비동기적인 프로그래밍을 한다면 상태 변경에 따른 프로퍼티 감시 및 사이드 이펙트에 대한 부가적인 구성이 굉장히 복잡해짐
++ Rx를 통해서 추상화를 통해 보다 선언적인 프로그래밍 형태로 코드를 보완하는 것이 가능
+
+👉🏻 [명령형 vs 선언형 프로그래밍](https://iborymagic.tistory.com/73)</br>
+👉🏻 [함수형(선언형), 반응형 프로그래밍](https://velog.io/@haero_kim/Android-%EB%8C%80%EC%B2%B4-%EC%82%AC%EB%9E%8C%EB%93%A4%EC%9D%B4-RxJava-%EA%B1%B0%EB%A6%AC%EB%8A%94-%EA%B2%8C-%EB%AD%90%EC%95%BC-Reactive-X-%EB%8B%A8-%EB%B2%88%EC%97%90-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0)
+
+### 3. 사이드 이펙트
++ 현재 scope 외 상태에서 일어나는 모든 변화
++ 해당 부수작용을 일일이 컨트롤하는 것은 굉장히 어려운 작업
++ 각각의 코드에 대해서, 해당 코드가 어떤 부수작용을 발생시킬 수 있는 코드인지, 단순 과정을 나열한 것인지, 명확한 결과값만을 발생시키는 것인지 정확히 인지하고 있는 것이 중요
++ Rx는 이러한 이슈를 추적가능
+
+### 4. 선언형 코드
++ 명령형 프로그래밍에서의 상태 변화는 자유자재로 가능하다.  함수형 코드에서는 부수작용을 일으킬 수 없다.
++ RxSwift는 이 두 가지를 결합 선언형 프로그래밍을 통해 자유로운 상태변화 + 추적/예측가능한 결과값을 토대로 구성 가능
+  + 이벤트가 있을 때 마다 이러한 동작을 실행하고 작업할 수 있는 불변의 고유한 데이터 입력을 제공(wrapping)
+  + 변경 불가능한 데이터로 작업하고, 순차적이고 결과론적인 방식으로 코드를 실행 가능
+
+### 5. Reactive systems
+비동기적인 데이터 흐름의 관찰
++ 반응성: 시스템의 즉각적인 응답
+  + UI인터렉션
++ 복원력: 일부 문제가 있더라도 시스템 사용 가능
++ 탄력성: 시스템에서 추가 리소스의 활용과 다양한 부하의 처리
+  + lazy full 기반 데이터 수집, 이벤트 제한 및 리소스 공유
++ 메시지 기반: 시스템에서 비동기 통신(메시지 기반)을 사용
+
+## D. RxSwift 기초
+ observables(생산자), operators(연산자), schedulers(스케줄러)
+ ### 1. Observables
+ <img src = "/Users/simon/Desktop/SSAC/RxSwift/What_is_RxSwift/Personal/SIMON/Asset/observable.png" width=400>
+<img src = "/Users/simon/Desktop/SSAC/RxSwift/What_is_RxSwift/Personal/SIMON/Asset/observableT.png" width=400>
+
+Observable<T> 형태로 T 타입의 데이터 snapshot을 '전달' 할 수 있는 일련의 이벤트를 비동기적으로 생성, 다른 클래스에서 만든 값을 시간에 따라 읽을 수 있다.
+하나 이상의 observers(관찰자)가 실시간으로 어떤 이벤트에 반응하고 활용하는 것이 가능
+ObservableType 프로토콜은 next, completed, error 세 가지 유형의 이벤트만 방출
+델리게이트 프로토콜을 사용하거나, 클래스 통신을 위해 클로저를 삽입할 필요가 없다.
+
+#### Finite observable sequences
++ 어떤 Observable sequence는 여러 타입의 값을 방출한 뒤, 성공적으로 또는 에러를 통해 종료
++ 단발적인 데이터 스트림의 시작과 끝이 있는 상황, 자연적으로 또는 강제적으로 종료
++ ex. 파일 다운로드
+    ```swift
+        API.download(file: "http://www...")
+            .subscribe(onNext: { data in
+                ... append data to temporary file
+            },
+            onError: { error in
+                ... display error alert to user
+            },
+            onCompleted: {
+                ... use downloaded file, present file into view
+            })
+    ```
+
+#### Infinite observable sequences
++ 보통 UI 이벤트와 같은 경우 단순히 무한한 sequence
++ 결국 이러한 시퀀스는 사실상 무한하기 때문에, 항상 최초값을 가지고 있어야 한다
++ 해당 Observable에서는 절대 발생하지 않을 이벤트인 onError나 onCompleted parameter는 건너뛸 수 있다
+
+    ```swift
+        UIDevice.rx.orientation
+            .subscribe(onNext: { current in
+                switch current {
+                    case .landscape:
+                        ... re-arrange UI for landscape
+                    case .portrait:
+                        ... re-arrange UI for portrait
+                }
+            })
+    ```
+
+### 2. Operators
++ Operator는 Observable을 재구성하는거나 다름없다
++ observableType과 Observable 클래스의 구현은 보다 복잡한 논리를 구현하기 위해 함께 구성되는 비동기 작업들을 추상화하는 많은 메소드가 포함되어 있다
++ 해당 메소드는 매우 독립적으로 구성가능하므로 Operators(연산자) 라고 불림
++ 연산자들은 언제나 입력된 데이터를 통해 결과값을 출력하므로, 단일 연산자가 독자적으로 할 수 있는 것보다 쉽게 연결 가능하며 훨씬 많은 것을 달성할 수 있다.
++ 생성, 필터, 변환, 결합, 기타 유틸
+  + 생성
+    + create: AnyObserver<T> 타입의 emitter 방출, next, error, completed의 세 가지 타입의 유형으로 switch 문을 통해 제어
+    + 간단한 생성: just, from
+  + 필터: filter, take
+  + 변환: map, flatMap, scan
+  + 결합: combineLatest, merge, zip
+  + 유틸: do, delay, observeOn, subscribeOn
+
+### 3. Schedulers
+
+<img src = "/Users/simon/Desktop/SSAC/RxSwift/What_is_RxSwift/Personal/SIMON/Asset/scheduler.png" width=400>
+
++ 스케줄러는 UIKit에서 dispatch queue와 동일
++ RxSwift에는 여러가지의 스케줄러가 이미 정의되어 있으며, 99%의 상황에서 사용가능
++ 각 색깔로 표시된 일들은 다음과 같이 각각 스케줄(1, 2, 3...)된다.
+  + network subscription은 (1)로 표시된 Custom NSOperation Scheduler에서 구동된다.
+  + 여기서 출력된 데이터는 다음 블록인 Background Concurrent Scheduler의 (2)로 가게 된다.
+  + 최종적으로, 네트워크 코드의 마지막 (3)은 Main Thread Serial Scheduler로 가서 UI를 새로운 데이터로 업데이트 한다.
+
+## E. App Architecture
++ RxSwift는 이벤트나 비동기 데이터 시퀀스 등을 주로 처리하기에 아키텍쳐 자체에 영향을 주진 않는다.
++ MVVM 아키텍쳐는 데이터 바인딩을 제공하는 플랫폼에서 이벤트 기반 소프트웨어용으로 개발되었기 때문에, 당연히 RxSwift와 MVVM는 같이 쓸 때 아주 멋지게 작동
+  + ViewModel을 사용하면 Observable<T> 속성을 노출할 수 있으며 ViewController의 UIKit에 직접 바인딩이 가능하다.
+  + 이렇게 하면 모델 데이터를 UI에 바인딩하고 표현하고 코드를 작성하는 것이 매우 간단해진다.
++ MVC , MVP 같은 아키텍처를 선호한다면 역시 가능
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
