@@ -81,15 +81,15 @@ class ActivityController: UITableViewController {
   }
 
   func fetchEvents(repo: String) {
-    let response = Observable.from([repo])
+    let response = Observable
+      .from([repo])
       // → Observable<URL>
       .map { urlString -> URL in
         return URL(string: "https://api.github.com/repos/\(urlString)/events")!
       }
       // → Observable<URLRequest>
       // 저장된 헤더 값을 사용하여 요청하면서
-      // 추가 헤더는 GitHub에 헤더 날짜보다 오래된 이벤트에 관심이 없다는 것을 알려줌
-      //
+      // 추가 헤더는 GitHub API에 헤더 날짜보다 오래된 이벤트에 관심이 없다는 것을 알려줌
       .map { [weak self] url -> URLRequest in
           var request = URLRequest(url: url)
           if let modifiedHeader = self?.lastModified.value {
@@ -135,7 +135,7 @@ class ActivityController: UITableViewController {
       .filter { response, _ in
         return 200..<400 ~= response.statusCode
       }
-      // Last-Modified header가 포함되지 않은 response들을 필터
+      // Last-Modified header가 없는 response들을 필터
       .flatMap { response, _ -> Observable<String> in
         guard let value = response.allHeaderFields["Last-Modified"] as? String else {
           return Observable.empty()
