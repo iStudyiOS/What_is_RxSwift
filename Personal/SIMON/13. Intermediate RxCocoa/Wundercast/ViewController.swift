@@ -65,16 +65,17 @@ class ViewController: UIViewController {
         let mapInput = mapView.rx.regionDidChangeAnimated
             .skip(1)
             .map { _ in
-                CLLocation(latitude: self.mapView.centerCoordinate.latitude,
-                           longitude: self.mapView.centerCoordinate.longitude)
+                CLLocation(
+                    latitude: self.mapView.centerCoordinate.latitude,
+                    longitude: self.mapView.centerCoordinate.longitude
+                )
             }
         
         // 현재 위치 버튼을 탭하면, 요청한 후 getCurrentLocation() 반응형 확장을 사용하고 CLLocation 타입의 정보 반환
         let geoInput = geoLocationButton.rx.tap
             .flatMapLatest { _ in self.locationManager.rx.getCurrentLocation() }
         
-        // 위치가 있으면, 좌표로 OpenWeather API에 또 다른 요청을 연결합니다.
-        // 지도에 대한 부분도 마찬가지
+        // 위치가 있으면, 좌표로 OpenWeather API에 또 다른 요청을 연결합니다. 지도에 대한 부분도 마찬가지
         // geoSearch로 날씨 유형을 관찰할 수 있게 하며, 이는 도시 이름을 입력으로 사용하여 이루어진 호출의 결과와 동일
         let geoSearch = Observable.merge(geoInput, mapInput)
             .flatMapLatest { location in
@@ -89,7 +90,6 @@ class ViewController: UIViewController {
                 .currentWeather(for: city)
                 .catchErrorJustReturn(.empty)
         }
-        
         
         let search = Observable
             .merge(geoSearch, textSearch)
@@ -142,7 +142,10 @@ class ViewController: UIViewController {
             .drive(cityNameLabel.rx.text)
             .disposed(by: bag)
         
+        
         // mapView 관련 overlay 구성
+        // 새로 도착한 데이터를 앞서 만든 오버레이 subject와 바인딩
+        // Weather struct를 올바르게 뷰에 나타내도록 overlay에 매핑
         search
             .map { $0.overlay() }
             .drive(mapView.rx.overlay)

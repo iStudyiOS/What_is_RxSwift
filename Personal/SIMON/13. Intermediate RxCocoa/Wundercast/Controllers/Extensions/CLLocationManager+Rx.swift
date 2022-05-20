@@ -46,40 +46,40 @@ class RxCLLocationManagerDelegateProxy: DelegateProxy<CLLocationManager, CLLocat
     // CLLocationManager 인스턴스에서 연결된 observable로 데이터를 이동시키는데 사용되는 proxy
     // delegate proxy 패턴을 쓰기위해 클래스를 확장
     public init(locationManager: ParentObject) {
-      self.locationManager = locationManager
-      super.init(parentObject: locationManager,
-                 delegateProxy: RxCLLocationManagerDelegateProxy.self)
+        self.locationManager = locationManager
+        super.init(parentObject: locationManager,
+                   delegateProxy: RxCLLocationManagerDelegateProxy.self)
     }
     
     static func registerKnownImplementations() {
-      register { RxCLLocationManagerDelegateProxy(locationManager: $0) }
+        register { RxCLLocationManagerDelegateProxy(locationManager: $0) }
     }
 }
 
 // rx 키워드를 통해 CLLocationManager 인스턴스의 method들을 호출이 가능
 extension Reactive where Base: CLLocationManager {
-     public var delegate: DelegateProxy<CLLocationManager, CLLocationManagerDelegate> {
-         return RxCLLocationManagerDelegateProxy.proxy(for: base)
-     }
-
+    public var delegate: DelegateProxy<CLLocationManager, CLLocationManagerDelegate> {
+        return RxCLLocationManagerDelegateProxy.proxy(for: base)
+    }
+    
     // Observable을 사용하면 프록시로 사용되는 대리자는 didUpdateLocations의 모든 호출을 듣고 데이터를 가져오고 CLLocations 배열로 캐스팅합니다.
     // methodInvoked(_:)는 지정된 method가 호출될 때마다 next 이벤트를 보내는 observable을 리턴
-     var didUpdateLocations: Observable<[CLLocation]> {
-         return delegate.methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didUpdateLocations:)))
-             .map { parameters in
-                 return parameters[1] as! [CLLocation]
-         }
-     }
+    var didUpdateLocations: Observable<[CLLocation]> {
+        return delegate.methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didUpdateLocations:)))
+            .map { parameters in
+                return parameters[1] as! [CLLocation]
+            }
+    }
     
     // 사용자가 권한을 부여했는지 여부를 알려주는 관찰 가능하도록 구성
     // 1. 두 번째 매개 변수는 구체적인 CLAuthorizationStatus 유형이 아닌 숫자이므로 적절하게 캐스팅하고 원시 값으로 CLAuthorizationStatus의 새 인스턴스를 초기화합니다.
     // 2. startWith를 사용하여 향후 변경 사항이 발생하기 전에 소비자가 즉시 현재 상태를 얻을 수 있도록 합니다.
     var authorizationStatus: Observable<CLAuthorizationStatus> {
-    delegate.methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didChangeAuthorization:)))
-        .map { parameters in
-          CLAuthorizationStatus(rawValue: parameters[1] as! Int32)!
-        }
-        .startWith(CLLocationManager.authorizationStatus())
+        delegate.methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didChangeAuthorization:)))
+            .map { parameters in
+                CLAuthorizationStatus(rawValue: parameters[1] as! Int32)!
+            }
+            .startWith(CLLocationManager.authorizationStatus())
     }
     
     // 1. authorizationStatus를 구독하고 승인된 상태로 변경될 때까지 기다리세요. 소비자가 이미 위치 서비스를 승인한 경우, startWith in authorizationStatus는 구독 시 즉시 알려줍니다.
@@ -87,17 +87,17 @@ extension Reactive where Base: CLLocationManager {
     // 3. 단일 위치만 필요하므로, 첫 번째 위치를 얻으면 take(1)을 사용하여 즉시 완료
     // 4. 마지막으로, 방금 만든 관찰 가능한 것을 반환합니다.
     func getCurrentLocation() -> Observable<CLLocation> {
-      let location = authorizationStatus
-        .filter { $0 == .authorizedWhenInUse || $0 == .authorizedAlways }
-        .flatMap { _ in self.didUpdateLocations.compactMap(\.first) }
-        .take(1)
-        .do(onDispose: { [weak base] in base?.stopUpdatingLocation() })
-
-      base.requestWhenInUseAuthorization()
-      base.startUpdatingLocation()
-      return location
-    }
- }
+        let location = authorizationStatus
+            .filter { $0 == .authorizedWhenInUse || $0 == .authorizedAlways }
+            .flatMap { _ in self.didUpdateLocations.compactMap(\.first) }
+            .take(1)
+            .do(onDispose: { [weak base] in base?.stopUpdatingLocation() })
+                
+                base.requestWhenInUseAuthorization()
+                base.startUpdatingLocation()
+                return location
+            }
+}
 
 
 
