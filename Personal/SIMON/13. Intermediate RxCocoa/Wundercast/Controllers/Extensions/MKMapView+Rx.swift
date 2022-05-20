@@ -51,6 +51,7 @@ public extension Reactive where Base: MKMapView {
     var delegate: DelegateProxy<MKMapView, MKMapViewDelegate> { RxMKMapViewDelegateProxy.proxy(for: base)
     }
     
+    // 기존 딜리게이트와 같이 사용할 수 있도록 구성해준다.
     func setDelegate(_ delegate: MKMapViewDelegate) -> Disposable {
         RxMKMapViewDelegateProxy.installForwardDelegate(
             delegate,
@@ -59,10 +60,14 @@ public extension Reactive where Base: MKMapView {
         )
     }
     
+    // MKOverlay의 모든 인스턴스를 받을 것이고 또한 이들은 현재 지도에 나타내준다
+    // Binder의 사용은 bind 또는 drive 함수를 사용할 수 있게 해준다.
+    // overlays binding observable 내서는 이전 Overlay들은 매번 Subject에 새 array가 보내질 때마다 사라지고 재생성
     var overlay: Binder<MKOverlay> {
         Binder(base) { mapView, overlay in
             mapView.removeOverlays(mapView.overlays)
             mapView.addOverlay(overlay)
+            mapView.setRegion(MKCoordinateRegion(center: overlay.coordinate, span: MKCoordinateSpan(latitudeDelta: 3, longitudeDelta: 3)), animated: true)
         }
     }
     
